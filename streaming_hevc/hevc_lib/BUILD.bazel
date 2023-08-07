@@ -1,0 +1,115 @@
+package(default_visibility = ["//visibility:public"])
+
+
+
+cc_library(
+    name = "hevc_decoder",
+    srcs = ["hevc_decoder/hevc_decoder_de265.cc", "hevc_decoder/hevc_decoder_avcodec.cc"],
+    hdrs = ["hevc_decoder/hevc_decoder_x86.h","blocking_queue.h"],
+    linkopts = [
+        "-lavcodec",
+        "-lavutil"
+    ],
+    deps = [
+        ":hevc_flags",
+        ":hevc_test_common",
+        "@libde265//:de265",
+        "@libavcodec//:avcodec",
+        "@xos//xdds/common:log",
+        "@xpilot_opencv//:opencv",
+        "//perception/common/utils:general_utils",
+        "@xos//xdds/tool/msg_factory:all_msg",
+        "@xpilot_fast_msgs//msg/camera_service:camera_image",
+        "@xpilot_fast_msgs//msg/camera_service:camera_video",
+    ]
+)
+
+cc_library(
+    name = "hevc_resizer",
+    srcs = ["hevc_decoder/hevc_resizer.cc"],
+    hdrs = ["hevc_decoder/hevc_resizer.h"],
+    linkopts = [ 
+        "-lswscale",
+    ],
+    deps = [
+       "@xos//xdds/common:log",
+       "@third_party//avcodec_deploy:avcodec",
+    ]
+)
+
+
+cc_library(
+    name= "hevc_flags",
+    hdrs = ["hevc_decoder/hevc_flags.h"],
+    srcs = ["hevc_decoder/hevc_flags.cc"],
+    deps = [
+        "@com_github_gflags_gflags//:gflags",
+    ]
+)
+
+cc_library(
+    name = "camera_config",
+    srcs = ["hevc_decoder/hevc_camera_config.cc"],
+    hdrs = ["hevc_decoder/hevc_camera_config.h"],
+    deps = [
+       ":hevc_flags",
+        "@xos//infra/common:log",
+        "@xpilot_yaml_cpp//:yaml-cpp",
+    ],
+)
+
+cc_library(
+    name = "hevc_io_context",
+    srcs = ["hevc_decoder/hevc_av_io_file_context.cc","hevc_decoder/hevc_av_io_stream_context.cc"],
+    hdrs = ["hevc_decoder/hevc_av_io_context.h"],
+    linkopts=["-lavformat",],
+    deps = [
+        "@xos//xdds/common:log",
+        "@third_party//avcodec_deploy:avcodec",
+        "hevc_decoder_header",
+        ":bq_header",
+        "@libde265//:de265",
+        "@xpilot_opencv//:opencv",
+        "@xpilot_fast_msgs//msg/camera_service:camera_image",
+        "@xpilot_fast_msgs//msg/camera_service:camera_video",
+        
+    ]
+)
+
+
+cc_library(
+    name = "hevc_encoder_x86",
+    hdrs = ["hevc_decoder/hevc_encoder_x86.h"],
+    srcs = ["hevc_decoder/hevc_encoder_avcodec.cc"],
+    deps = [
+        ":hevc_flags",
+        "@xos//xdds/common:log",
+        "@xpilot_fast_msgs//msg/camera_service:camera_video",
+        "@third_party//avcodec_deploy:avcodec",
+    ]
+)
+
+cc_library(
+    name = "hevc_decoder_header",
+    hdrs = ["hevc_decoder/hevc_decoder_x86.h", "hevc_decoder/hevc_flags.h"]
+)
+
+
+cc_library(
+    name = "hevc_decoder_context",
+    srcs = ["hevc_decoder/hevc_decoder_context.cc"],
+    hdrs = ["hevc_decoder/hevc_decoder_context.h"],
+    deps = [
+        ":hevc_io_context",
+        ":hevc_encoder_x86",
+        ":hevc_resizer",
+        ":hevc_flags",
+        ":camera_config",
+        "@xpilot_fast_msgs//msg/camera_service:camera_video",
+        "@xos//xdds/common:log",
+        "@perception//perception/common/utils:log_utils",
+        #":dds_consumer_header",
+    ]
+
+)
+
