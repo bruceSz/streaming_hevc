@@ -34,20 +34,22 @@
  */
 
 #include <algorithm>
+#include <numeric>
 #include <filesystem>
 
 #include "streaming_hevc/stream/dir_stream_reader.h"
+#include "streaming_hevc/common/log.h"
 
 namespace streaming {
 namespace hevc {
 
 H265DirBlockReader::H265DirBlockReader(std::string fpath)
     : dir_path_(std::move(fpath)), curr_idx_(0), buffer_(BUFFER_SIZE, '0') {
-  XCHECK(std::filesystem::exists(dir_path_));
-  std::filesystem::path p_obj(dir_path_);
-  std::filesystem::directory_entry entry(p_obj);
-  std::filesystem::directory_iterator list(p_obj);
-  EXPECT_EQ(entry.status().type(), std::filesystem::file_type::directory);
+   CHECK(std::filesystem::exists(dir_path_));
+   std::filesystem::path p_obj(dir_path_);
+//   std::filesystem::directory_entry entry(p_obj);
+   std::filesystem::directory_iterator list(p_obj);
+   //CHECK_EQ(entry.status().type(), std::filesystem::file_type::directory);
 
   std::vector<int64_t> ts_list;
   for (auto& it : list) {
@@ -56,7 +58,7 @@ H265DirBlockReader::H265DirBlockReader(std::string fpath)
     std::string suffix = ".h265";
     if (0 == name.compare(name.length() - suffix.length(), suffix.length(),
                           suffix)) {
-      XINFO << "PROC file: " << name << std::endl;
+      LOG(INFO) << "PROC file: " << name << std::endl;
       std::filesystem::path full_path = p_obj / it.path();
 
       std::string stem = it.path().stem();
@@ -81,18 +83,18 @@ int H265DirBlockReader::getNextBlock(char** buf) {
     int curr_path_idx = ts_ordered_path_idxs_[curr_idx_++];
     std::string fpath = file_paths_[curr_path_idx];
     fh_.close();
-    XINFO << "OPEN h265 file: " << fpath << std::endl;
+    LOG(INFO) << "OPEN h265 file: " << fpath << std::endl;
     fh_.open(fpath);
-    XCHECK(fh_);
+    CHECK(fh_);
     int total_f_sz = std::filesystem::file_size(fpath);
     if (total_f_sz > buffer_.size()) {
-      XINFO << "Resize buffer to: " << buffer_.size() << std::endl;
+      LOG(INFO) << "Resize buffer to: " << buffer_.size() << std::endl;
       buffer_.resize(total_f_sz);
     }
 
-    XINFO << "Reading file: " << fpath << " with size: " << total_f_sz
+    LOG(INFO) << "Reading file: " << fpath << " with size: " << total_f_sz
           << std::endl;
-    XCHECK(fh_.read(&buffer_[0], total_f_sz));
+    CHECK(fh_.read(&buffer_[0], total_f_sz));
     *buf = &buffer_[0];
     return total_f_sz;
   }

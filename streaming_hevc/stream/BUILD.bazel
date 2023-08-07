@@ -2,3 +2,23 @@ package(default_visibility = ["//visibility:public"])
 
 
 
+cc_library(
+    name = "dir_stream_reader",
+    srcs = ["dir_stream_reader.cc"],
+    hdrs = ["dir_stream_reader.h"],
+    copts = [
+         "-std=c++17",
+    ],
+    deps = [
+        "//streaming_hevc/common:log",
+        ":stream_source",
+    ]
+)
+
+
+cc_library(
+    name = "stream_source",
+    hdrs = ["stream_source.h"],
+
+
+)
